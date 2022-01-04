@@ -984,7 +984,6 @@ static napi_value ctr128_inc(napi_env env, napi_callback_info info)
   size_t argc = 2;
   napi_value argv[7];
   OK(napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-  printf("%d", argc);
   if (argc != 2)
     THROW(env, E_ARGUMENTS);
   int offset = 0;
