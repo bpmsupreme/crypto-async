@@ -964,6 +964,48 @@ static napi_value cipher(napi_env env, napi_callback_info info)
   );
 }
 
+typedef unsigned int u32;
+typedef unsigned char u8;
+static void ctr128_inc_exec(unsigned char *counter, u32 c)
+{
+  u32 n = 16;
+
+  do
+  {
+    --n;
+    c += counter[n];
+    counter[n] = (u8)c;
+    c >>= 8;
+  } while (n);
+}
+
+static napi_value ctr128_inc(napi_env env, napi_callback_info info)
+{
+  size_t argc = 2;
+  napi_value argv[7];
+  OK(napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+  printf("%d", argc);
+  if (argc != 2)
+    THROW(env, E_ARGUMENTS);
+  int offset = 0;
+  int buf_length = 0;
+  if (!arg_int(env, argv[1], &offset, E_ARGUMENTS))
+  {
+    return NULL;
+  }
+  unsigned char *source = NULL;
+  if (!arg_buf(env, argv[0], &source, &buf_length, E_SOURCE))
+  {
+    return NULL;
+  }
+  if (buf_length != 16)
+  {
+    return NULL;
+  }
+  ctr128_inc_exec(source, offset);
+  return NULL;
+}
+
 static napi_value hash(napi_env env, napi_callback_info info)
 {
   size_t argc = 7;
@@ -1152,6 +1194,11 @@ static napi_value Init(napi_env env, napi_value exports)
   napi_value fn_hash;
   OK(napi_create_function(env, NULL, 0, hash, NULL, &fn_hash));
   OK(napi_set_named_property(env, exports, "hash", fn_hash));
+
+  napi_value fn_ctr128_inc;
+  OK(napi_create_function(env, NULL, 0, ctr128_inc, NULL, &fn_ctr128_inc));
+  OK(napi_set_named_property(env, exports, "ctr128_inc", fn_ctr128_inc));
+
   napi_value fn_hmac;
   OK(napi_create_function(env, NULL, 0, hmac, NULL, &fn_hmac));
   OK(napi_set_named_property(env, exports, "hmac", fn_hmac));
