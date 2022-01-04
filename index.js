@@ -13,12 +13,12 @@ if (!Number.isInteger(binding.CIPHER_BLOCK_MAX)) {
 for (var key in binding) {
   if (/^[A-Z_]+$/.test(key)) {
     module.exports[key] = binding[key];
-  } else if (!/^(cipher|hash|hmac)$/.test(key)) {
+  } else if (!/^(cipher|hash|hmac|ctr128_inc)$/.test(key)) {
     throw new Error('non-whitelisted binding property: ' + key);
   }
 }
 
-module.exports.cipher = function(...args) {
+module.exports.cipher = function (...args) {
   if (args.length === 19 || args.length === 20) return binding.cipher(...args);
   if (args.length >= 5 && args.length <= 8) {
     var algorithm = args[0];
@@ -61,7 +61,7 @@ module.exports.cipher = function(...args) {
       var end = args[args.length - 1];
       if (typeof end !== 'function') throw new Error(binding.E_CALLBACK);
       return binding.cipher(...parameters,
-        function(error, targetSize) {
+        function (error, targetSize) {
           if (error) return end(error);
           end(undefined, target.slice(0, targetSize));
         }
@@ -81,7 +81,7 @@ module.exports.cipher = function(...args) {
   }
 };
 
-module.exports.hash = function(...args) {
+module.exports.hash = function (...args) {
   if (args.length === 6 || args.length === 7) return binding.hash(...args);
   if (args.length < 2 || args.length > 3) throw new Error(binding.E_ARGUMENTS);
   var algorithm = args[0];
@@ -107,7 +107,7 @@ module.exports.hash = function(...args) {
       source.length,
       target,
       0,
-      function(error, targetSize) {
+      function (error, targetSize) {
         if (error) return end(error);
         end(undefined, target.slice(0, targetSize));
       }
@@ -115,7 +115,7 @@ module.exports.hash = function(...args) {
   }
 };
 
-module.exports.hmac = function(...args) {
+module.exports.hmac = function (...args) {
   if (args.length === 9 || args.length === 10) return binding.hmac(...args);
   if (args.length < 3 || args.length > 4) throw new Error(binding.E_ARGUMENTS);
   var algorithm = args[0];
@@ -149,7 +149,7 @@ module.exports.hmac = function(...args) {
       source.length,
       target,
       0,
-      function(error, targetSize) {
+      function (error, targetSize) {
         if (error) return end(error);
         end(undefined, target.slice(0, targetSize));
       }
