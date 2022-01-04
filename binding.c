@@ -966,16 +966,43 @@ static napi_value cipher(napi_env env, napi_callback_info info)
 
 typedef unsigned int u32;
 typedef unsigned char u8;
+
 static void ctr128_inc_exec(unsigned char *counter, u32 c)
 {
   u32 n = 16;
-
   do
   {
     --n;
     c += counter[n];
     counter[n] = (u8)c;
     c >>= 8;
+  } while (n);
+}
+
+static void ctr128_inc_aligned_exec(unsigned char *counter, u32 c)
+{
+  size_t *data, d, n;
+  const union
+  {
+    long one;
+    char little;
+  } is_endian = {
+      1};
+
+  if (is_endian.little || ((size_t)counter % sizeof(size_t)) != 0)
+  {
+    ctr128_inc_exec(counter, c);
+    return;
+  }
+
+  data = (size_t *)counter;
+  n = 16 / sizeof(size_t);
+  do
+  {
+    --n;
+    d = data[n] += c;
+    /* did addition carry? */
+    c = ((d - c) & ~d) >> (sizeof(size_t) * 8 - 1);
   } while (n);
 }
 
@@ -1001,7 +1028,7 @@ static napi_value ctr128_inc(napi_env env, napi_callback_info info)
   {
     return NULL;
   }
-  ctr128_inc_exec(source, offset);
+  ctr128_inc_aligned_exec(source, offset);
   return NULL;
 }
 
