@@ -18,6 +18,8 @@ for (var key in binding) {
   }
 }
 
+module.exports.ctr128_inc = binding.ctr128_inc
+
 module.exports.cipher = function (...args) {
   if (args.length === 19 || args.length === 20) return binding.cipher(...args);
   if (args.length >= 5 && args.length <= 8) {
